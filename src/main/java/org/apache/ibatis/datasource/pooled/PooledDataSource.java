@@ -98,7 +98,7 @@ public class PooledDataSource implements DataSource {
 
   @Override
   public Connection getConnection() throws SQLException {
-	  //覆盖了DataSource.getConnection方法，每次都是pop一个Connection，即从池中取出一个来
+    //覆盖了DataSource.getConnection方法，每次都是pop一个Connection，即从池中取出一个来
     return popConnection(dataSource.getUsername(), dataSource.getPassword()).getProxyConnection();
   }
 
@@ -384,6 +384,13 @@ public class PooledDataSource implements DataSource {
     }
   }
 
+  /**
+   * 从链接池中获取一个链接
+   * @param username
+   * @param password
+   * @return
+   * @throws SQLException
+   */
   private PooledConnection popConnection(String username, String password) throws SQLException {
     boolean countedWait = false;
     PooledConnection conn = null;
@@ -458,6 +465,7 @@ public class PooledDataSource implements DataSource {
         if (conn != null) {
         	//如果已经拿到connection，则返回
           if (conn.isValid()) {
+            //如果当前链接不是自动提交事物，再返回之前先执行回滚，如果上一个程序使用该链接时事物没有提交，则此处会回滚掉。
             if (!conn.getRealConnection().getAutoCommit()) {
               conn.getRealConnection().rollback();
             }
